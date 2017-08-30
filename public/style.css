@@ -1,0 +1,18 @@
+.grid-gradient {
+    background:
+        linear-gradient(
+                mediumvioletred, transparent 1px
+        ),
+        linear-gradient(
+                90deg,
+                mediumvioletred, transparent 1px
+        );
+    background-size: 32px 32px;
+    background-position: center center;
+    border: 2px solid mediumvioletred;
+}
+
+#game-zone {
+    width: 100%;
+    min-height: 600px;
+}
