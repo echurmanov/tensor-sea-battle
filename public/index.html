@@ -7,7 +7,14 @@
     </head>
     <body>
         <div id="game-zone" class="grid-gradient">
-
+            <svg id="my-field" width="320" height="320">
+                <path class="field" stroke="blue" stroke-dasharray="320 0" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" d="M0 0 l 320 0 "  fill="none">
+                    <animate attributeName="stroke-dasharray" values="0 320;320 0" begin="0s" dur="2s" />
+                </path>
+            </svg>
         </div>
+
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="script.js"></script>
     </body>
 </html>
