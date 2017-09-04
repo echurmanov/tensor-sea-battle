@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "webpack": "^2.7.0"
+  },
+  "scripts": {
+    "build": "webpack --env=dev --config webpack.config.js",
+    "build-prod": "webpack --env=prod -p --config webpack.config.js"
+  }
+}

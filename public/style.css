@@ -1,17 +1,50 @@
-.grid-gradient {
-    background:
-        linear-gradient(
-                mediumvioletred, transparent 1px
-        ),
-        linear-gradient(
-                90deg,
-                mediumvioletred, transparent 1px
-        );
-    background-size: 32px 32px;
-    background-position: center center;
-    border: 2px solid mediumvioletred;
+.cell {
+    float: left;
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 1px #00e4ff solid;
+
 }
 
+.alpha-cell {
+    text-align: center;
+    vertical-align: middle;
+    clear: both;
+    border-right: 2px solid #a3020a;
+    border-left: none ;
+}
+
+.number-cell {
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 2px solid #a3020a;
+    border-top: none ;
+}
+
+.top-left-corn {
+    border-bottom: 2px solid #a3020a;
+    border-right: 2px solid #a3020a;
+    border-top: none ;
+    border-left: none ;
+}
+
+.own-ship {
+    background-color: #4dca00;
+    border: none;
+    padding: 1px;
+}
+
+.field {
+    display:block;
+    float:left;
+
+    margin:10px;
+}
+
+.interective {
+    cursor: pointer;
+}
 #game-zone {
     width: 100%;
     min-height: 600px;
