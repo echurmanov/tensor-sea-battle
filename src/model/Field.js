@@ -92,21 +92,24 @@ export default class Field {
    * @param addShootMarks
    */
   markCloseZone(centerX, centerY, addShootMarks = false) {
+    console.log(addShootMarks);
     for (let sx = -1; sx <=1; sx++) {
       for (let sy = -1; sy <=1; sy++) {
         const dx = centerX + sx;
         const dy = centerY + sy;
         if (dx >= 0 && dx < this.width
           && dy >=0 && dy < this.height
-          && this.shipMap[dx][dy] === null
+          && (this.shipMap[dx][dy] === null || this.shipMap[dx][dy] == '.')
         ) {
           this.shipMap[dx][dy] = '.';
           if (addShootMarks) {
+            console.log("MARK EMPTY", dx, dy);
             this.shootMap[dx][dy] = '.';
           }
         }
       }
     }
+    console.log(this.shootMap);
   }
 
   /**
@@ -157,6 +160,7 @@ export default class Field {
         mark = 'x';
         this.shipMap[x][y].damage();
         if (this.shipMap[x][y].state == CONST.SHIP_STATE_DEAD) {
+          console.log("MARK_DEAD");
           this.markDeadShip(this.shipMap[x][y]);
         }
 

@@ -10,7 +10,9 @@ const CONST = {
     TOP_BORDER: 'top-border',
     BOTTOM_BORDER: 'bottom-border',
     OWN_SHIP: 'own-ship',
-    MISS_SHOOT: 'miss-shoot'
+    MISS_SHOOT: 'miss-shoot',
+    CELL_DEAD_SHIP: 'dead-ship',
+    CELL_DAMAGED_SHIP: 'damaged-ship'
   },
   ALPHA_LIST: [
     'А', 'Б', 'В', 'Г', 'Д','Е','Ж','З', 'И', 'К', 'Л', 'М', 'Н'
@@ -118,6 +120,15 @@ export default class UIField {
     this.modelField.doForEachCell((x, y, field) => {
       if (field.shootMap[x][y] == '.') {
         this.cellMap[x][y].addClass(CONST.CSS.MISS_SHOOT)
+      }
+      if (field.shootMap[x][y] == 'x') {
+        if (field.shipMap[x][y].state == 'DEAD') {
+          this.cellMap[x][y].removeClass(CONST.CSS.CELL_DAMAGED_SHIP)
+          this.cellMap[x][y].addClass(CONST.CSS.CELL_DEAD_SHIP)
+        } else {
+          this.cellMap[x][y].addClass(CONST.CSS.CELL_DAMAGED_SHIP)
+        }
+
       }
     });
   }

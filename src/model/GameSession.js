@@ -69,7 +69,7 @@ export default class GameSession {
     if (this.currentPlayer.human == false) {
       setTimeout(() => {
         this.doAI();
-      }, 2000);
+      }, 500);
     }
     return true;
   }
@@ -84,20 +84,46 @@ export default class GameSession {
 
     let len = 0;
     let dir = 0;
+    let shift = 0;
     let dx = tx;
     let dy = ty;
-    let alertLimit = targetField.width * targetField.height;
+    let alertLimit = targetField.width * targetField.height * 100;
     while (!this.doShoot(targetField, dx, dy) && alertLimit > -1) {
       if (dir % 4 == 0) {
         len++;
         dir = 0;
+        shift = 0;
       }
-      
-      dir++;
+
+      switch (dir) {
+        case 0:
+          dx = tx + len - shift;
+          dy = ty + shift;
+          break;
+        case 1:
+          dx = tx - shift;
+          dy = ty + len - shift;
+          break;
+        case 2:
+          dx = tx - len + shift;
+          dy = ty + shift;
+          break;
+        case 3:
+          dx = tx + shift;
+          dy = ty - len + shift;
+          break;
+      }
+
+      shift++;
+      if (shift > len) {
+        shift = 0;
+        dir++;
+      }
+
       alertLimit--;
     }
     if (alertLimit < 0) {
-      throw new Exception("AI can't do shoot");
+      throw new Error("AI can't do shoot");
     }
   }
 }

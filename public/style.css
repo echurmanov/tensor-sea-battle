@@ -41,6 +41,13 @@
 
     margin:10px;
 }
+div.dead-ship {
+    background-color: red;
+}
+
+div.damaged-ship {
+    background-color: darkslategray;
+}
 
 .miss-shoot {
     background-color: blue;

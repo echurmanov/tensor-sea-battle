@@ -211,7 +211,7 @@ class GameSession {
     if (target) {
       field.emitter.emit('update', field);
     }
-    console.log(target);
+
     if (target != 'x') {
       if (this.currentPlayer == this.player1) {
         this.currentPlayer = this.player2;
@@ -219,8 +219,65 @@ class GameSession {
         this.currentPlayer = this.player1;
       }
     }
+    if (this.currentPlayer.human == false) {
+      setTimeout(() => {
+        this.doAI();
+      }, 500);
+    }
+    return true;
+  }
 
-    console.log(this.currentPlayer);
+  /**
+   * Делаем ход компьютерным игроком
+   */
+  doAI() {
+    const targetField = this.currentPlayer == this.player1?this.field2:this.field1;
+    const tx = Math.floor(Math.random() * targetField.width);
+    const ty = Math.floor(Math.random() * targetField.height);
+
+    let len = 0;
+    let dir = 0;
+    let shift = 0;
+    let dx = tx;
+    let dy = ty;
+    let alertLimit = targetField.width * targetField.height * 100;
+    while (!this.doShoot(targetField, dx, dy) && alertLimit > -1) {
+      if (dir % 4 == 0) {
+        len++;
+        dir = 0;
+        shift = 0;
+      }
+
+      switch (dir) {
+        case 0:
+          dx = tx + len - shift;
+          dy = ty + shift;
+          break;
+        case 1:
+          dx = tx - shift;
+          dy = ty + len - shift;
+          break;
+        case 2:
+          dx = tx - len + shift;
+          dy = ty + shift;
+          break;
+        case 3:
+          dx = tx + shift;
+          dy = ty - len + shift;
+          break;
+      }
+
+      shift++;
+      if (shift > len) {
+        shift = 0;
+        dir++;
+      }
+
+      alertLimit--;
+    }
+    if (alertLimit < 0) {
+      throw new Error("AI can't do shoot");
+    }
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = GameSession;
@@ -244,7 +301,9 @@ const CONST = {
     TOP_BORDER: 'top-border',
     BOTTOM_BORDER: 'bottom-border',
     OWN_SHIP: 'own-ship',
-    MISS_SHOOT: 'miss-shoot'
+    MISS_SHOOT: 'miss-shoot',
+    CELL_DEAD_SHIP: 'dead-ship',
+    CELL_DAMAGED_SHIP: 'damaged-ship'
   },
   ALPHA_LIST: [
     'А', 'Б', 'В', 'Г', 'Д','Е','Ж','З', 'И', 'К', 'Л', 'М', 'Н'
@@ -352,6 +411,15 @@ class UIField {
     this.modelField.doForEachCell((x, y, field) => {
       if (field.shootMap[x][y] == '.') {
         this.cellMap[x][y].addClass(CONST.CSS.MISS_SHOOT)
+      }
+      if (field.shootMap[x][y] == 'x') {
+        if (field.shipMap[x][y].state == 'DEAD') {
+          this.cellMap[x][y].removeClass(CONST.CSS.CELL_DAMAGED_SHIP)
+          this.cellMap[x][y].addClass(CONST.CSS.CELL_DEAD_SHIP)
+        } else {
+          this.cellMap[x][y].addClass(CONST.CSS.CELL_DAMAGED_SHIP)
+        }
+
       }
     });
   }
@@ -507,21 +575,24 @@ class Field {
    * @param addShootMarks
    */
   markCloseZone(centerX, centerY, addShootMarks = false) {
+    console.log(addShootMarks);
     for (let sx = -1; sx <=1; sx++) {
       for (let sy = -1; sy <=1; sy++) {
         const dx = centerX + sx;
         const dy = centerY + sy;
         if (dx >= 0 && dx < this.width
           && dy >=0 && dy < this.height
-          && this.shipMap[dx][dy] === null
+          && (this.shipMap[dx][dy] === null || this.shipMap[dx][dy] == '.')
         ) {
           this.shipMap[dx][dy] = '.';
           if (addShootMarks) {
+            console.log("MARK EMPTY", dx, dy);
             this.shootMap[dx][dy] = '.';
           }
         }
       }
     }
+    console.log(this.shootMap);
   }
 
   /**
@@ -572,6 +643,7 @@ class Field {
         mark = 'x';
         this.shipMap[x][y].damage();
         if (this.shipMap[x][y].state == __WEBPACK_IMPORTED_MODULE_1__const_js__["e" /* SHIP_STATE_DEAD */]) {
+          console.log("MARK_DEAD");
           this.markDeadShip(this.shipMap[x][y]);
         }
 
