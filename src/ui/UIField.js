@@ -9,7 +9,8 @@ const CONST = {
     RIGHT_BORDER: 'right-border',
     TOP_BORDER: 'top-border',
     BOTTOM_BORDER: 'bottom-border',
-    OWN_SHIP: 'own-ship'
+    OWN_SHIP: 'own-ship',
+    MISS_SHOOT: 'miss-shoot'
   },
   ALPHA_LIST: [
     'А', 'Б', 'В', 'Г', 'Д','Е','Ж','З', 'И', 'К', 'Л', 'М', 'Н'
@@ -17,19 +18,36 @@ const CONST = {
 };
 
 
+import EventEmitter from '../utils/EventEmitter.js';
+
+
 export default class UIField {
-  constructor(field, interective) {
+  constructor(DOMElement, field, interactive) {
     this.modelField = field;
-    this.interective = interective;
+    this.interactive = interactive;
+
+    this.modelField.on('update', (field) => {
+      this.draw();
+    });
+
+    this.domElement = $(DOMElement);
+
+    this.emitter = new EventEmitter();
+
+    this.cellMap = [];
   }
+  on(event, func) {
+    this.emitter.on(event, func);
+  }
+
+
 
   /**
    * Полная отрисовка поля в указанный элемент
    *
-   * @param DOMElement
    */
-  fullDraw(DOMElement) {
-    const el = $(DOMElement);
+  fullDraw() {
+    const el = this.domElement;
     const own = this.modelField.ownField;
     el.html('');
     const corn = $(document.createElement('div'));
@@ -41,11 +59,14 @@ export default class UIField {
       const numberCell = $(document.createElement('div'));
       numberCell.addClass(CONST.CSS.CELL);
       numberCell.addClass(CONST.CSS.NUMBER_CELL);
-      numberCell.text(x+1);
+      numberCell.text(x + 1);
       el.append(numberCell);
     }
 
     this.modelField.doForEachCell((x, y, field) => {
+      if (typeof this.cellMap[x] === 'undefined') {
+        this.cellMap[x] = [];
+      }
       if (x == 0) {
         const alphaCell = $(document.createElement('div'));
         alphaCell.addClass(CONST.CSS.CELL);
@@ -76,8 +97,8 @@ export default class UIField {
         fieldCell.addClass(CONST.CSS.OWN_SHIP);
       }
 
-      if (this.interective) {
-        fieldCell.addClass("interective");
+      if (this.interactive) {
+        fieldCell.addClass("interactive");
         fieldCell.data('x', x);
         fieldCell.data('y', y);
         fieldCell.on('click', (evt) => {
@@ -85,12 +106,29 @@ export default class UIField {
         })
       }
 
+      if (field.shootMap[x][y] == '.') {
+        fieldCell.addClass("miss-shoot");
+      }
+      this.cellMap[x][y] = fieldCell;
       el.append(fieldCell);
     });
-
   }
 
+  draw() {
+    this.modelField.doForEachCell((x, y, field) => {
+      if (field.shootMap[x][y] == '.') {
+        this.cellMap[x][y].addClass(CONST.CSS.MISS_SHOOT)
+      }
+    });
+  }
+
+  /**
+   * Генерируем клик
+   *
+   * @param x
+   * @param y
+   */
   click(x, y) {
-    console.log("CLICK", x, y);
+    this.emitter.emit('click', {uiField: this, x: x, y:y});
   }
 }

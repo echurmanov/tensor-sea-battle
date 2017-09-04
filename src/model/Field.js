@@ -1,6 +1,8 @@
 import Ship from "./Ship.js";
 import * as CONST from './const.js';
 
+import EventEmitter from '../utils/EventEmitter.js';
+
 
 export default class Field {
   constructor (width, height) {
@@ -19,7 +21,13 @@ export default class Field {
     }
     this.ship = [];
 
-    this.ownField = true;
+    this.ownField = false;
+
+    this.emitter = new EventEmitter();
+  }
+
+  on(event, func) {
+    this.emitter.on(event, func);
   }
 
   /**
@@ -81,8 +89,9 @@ export default class Field {
    * Отмечаем зону вокруг указаной клекти как закрытую длфя размещения кораблей
    * @param centerX
    * @param centerY
+   * @param addShootMarks
    */
-  markCloseZone(centerX, centerY) {
+  markCloseZone(centerX, centerY, addShootMarks = false) {
     for (let sx = -1; sx <=1; sx++) {
       for (let sy = -1; sy <=1; sy++) {
         const dx = centerX + sx;
@@ -92,6 +101,9 @@ export default class Field {
           && this.shipMap[dx][dy] === null
         ) {
           this.shipMap[dx][dy] = '.';
+          if (addShootMarks) {
+            this.shootMap[dx][dy] = '.';
+          }
         }
       }
     }
@@ -107,6 +119,51 @@ export default class Field {
         func(x, y, this);
       }
     }
+  }
+
+  markDeadShip(ship) {
+    this.doForEachCell((x, y, field) => {
+      if (this.shipMap[x][y] == ship) {
+        this.markCloseZone(x, y, true);
+      }
+    });
+  }
+
+  /**
+   * Проверка возможности выстрела в указанную точку
+   *
+   * @param x
+   * @param y
+   * @returns {boolean}
+   */
+  validateShoot(x, y) {
+    return x >=0 && x < this.width
+      && y >=0 && y < this.height
+      && this.shootMap[x][y] === null;
+  }
+
+  /**
+   *
+   * @param x
+   * @param y
+   *
+   * @return
+   */
+  shoot(x, y) {
+    let mark = '';
+    if (this.validateShoot(x, y)) {
+      mark = '.';
+      if (this.shipMap[x][y] !== null && this.shipMap[x][y] instanceof Ship) {
+        mark = 'x';
+        this.shipMap[x][y].damage();
+        if (this.shipMap[x][y].state == CONST.SHIP_STATE_DEAD) {
+          this.markDeadShip(this.shipMap[x][y]);
+        }
+
+      }
+      this.shootMap[x][y] = mark;
+    }
+    return mark;
   }
 
 

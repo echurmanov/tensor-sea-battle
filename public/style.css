@@ -42,7 +42,11 @@
     margin:10px;
 }
 
-.interective {
+.miss-shoot {
+    background-color: blue;
+}
+
+.interactive {
     cursor: pointer;
 }
 #game-zone {

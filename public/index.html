@@ -16,18 +16,7 @@
         <script src="assets/jquery-3.2.1.min.js"></script>
         <script src="assets/game-dev.js"></script>
         <script>
-            console.log(Game);
-            const ownField = new Game.field(10, 10);
-            ownField.ownField = true;
-            ownField.generate([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]);
-            const uiField = new Game.uiField(ownField, false);
-            uiField.fullDraw("#game-zone-1");
-
-            const enemyField = new Game.field(10, 10);
-            enemyField.ownField = false;
-            enemyField.generate([4, 3, 3, 2, 2, 2, 1, 1, 1, 1]);
-            const uiEnemyField = new Game.uiField(enemyField, true);
-            uiEnemyField.fullDraw("#game-zone-2");
+            Game.run("#game-zone-1", "#game-zone-2");
         </script>
     </body>
 </html>

@@ -64,7 +64,7 @@ var Game =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -74,29 +74,33 @@ var Game =
 "use strict";
 
 const SHIP_DIR_H = 'h';
-/* harmony export (immutable) */ __webpack_exports__["a"] = SHIP_DIR_H;
+/* harmony export (immutable) */ __webpack_exports__["c"] = SHIP_DIR_H;
 
 const SHIP_DIR_V = 'v';
-/* harmony export (immutable) */ __webpack_exports__["b"] = SHIP_DIR_V;
+/* harmony export (immutable) */ __webpack_exports__["d"] = SHIP_DIR_V;
 
 
 const SHIP_STATE_UNKNOWN = 'UNKNOWN';
-/* harmony export (immutable) */ __webpack_exports__["c"] = SHIP_STATE_UNKNOWN;
+/* harmony export (immutable) */ __webpack_exports__["f"] = SHIP_STATE_UNKNOWN;
 
 const SHIP_STATE_LIVE = 'LIVE';
-/* harmony export (immutable) */ __webpack_exports__["d"] = SHIP_STATE_LIVE;
+/* harmony export (immutable) */ __webpack_exports__["g"] = SHIP_STATE_LIVE;
 
 const SHIP_STATE_DEAD = 'DEAD';
-/* harmony export (immutable) */ __webpack_exports__["f"] = SHIP_STATE_DEAD;
+/* harmony export (immutable) */ __webpack_exports__["e"] = SHIP_STATE_DEAD;
 
 const SHIP_STATE_DAMAGED = 'DAMAGED';
-/* harmony export (immutable) */ __webpack_exports__["e"] = SHIP_STATE_DAMAGED;
+/* harmony export (immutable) */ __webpack_exports__["h"] = SHIP_STATE_DAMAGED;
+
+
+const FIELD_SIZE = 10;
+/* harmony export (immutable) */ __webpack_exports__["a"] = FIELD_SIZE;
 
 
 const defaultShipConfig = [
   4, 3, 3, 2, 2, 2, 1, 1, 1, 1
 ];
-/* unused harmony export defaultShipConfig */
+/* harmony export (immutable) */ __webpack_exports__["b"] = defaultShipConfig;
 
 
 /***/ }),
@@ -104,131 +108,40 @@ const defaultShipConfig = [
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Ship_js__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__const_js__ = __webpack_require__(0);
 
-
-
-
-class Field {
-  constructor (width, height) {
-    this.width = width;
-    this.height = height;
-
-    this.shipMap = [];
-    this.shootMap = [];
-    for (let x = 0; x < width; x++) {
-      this.shipMap[x] = [];
-      this.shootMap[x] = [];
-      for (let y = 0; y < height; y++) {
-        this.shipMap[x][y] = null;
-        this.shootMap[x][y] = null;
-      }
-    }
-    this.ship = [];
-
-    this.ownField = true;
+class EventEmitter {
+  constructor () {
+    this._listeners = {};
   }
 
   /**
-   * Генерируем размещение кораблей
+   * Добавление слушателя события
    *
-   * @param shipConfig
+   * @param event
+   * @param func
    */
-  generate(shipConfig) {
-
-    const shipList = shipConfig.slice(0);
-    shipList.forEach((shipSize) => {
-      let placeTry = 1000;
-      const ship = new __WEBPACK_IMPORTED_MODULE_0__Ship_js__["a" /* default */](
-        shipSize,
-        Math.random() > 0.5?__WEBPACK_IMPORTED_MODULE_1__const_js__["a" /* SHIP_DIR_H */]:__WEBPACK_IMPORTED_MODULE_1__const_js__["b" /* SHIP_DIR_V */]
-      );
-      if (this.ownField) {
-        ship.live();
-      }
-      let placeSuccess;
-      do {
-        placeSuccess = true;
-
-        const x = Math.floor(Math.random() * this.width);
-        const y = Math.floor(Math.random() * this.height);
-
-        const shipPlaces = [];
-
-        for (let s = 0; s < ship.size && placeSuccess; s++) {
-          let dx = x;
-          let dy = y;
-          if (ship.dir == __WEBPACK_IMPORTED_MODULE_1__const_js__["a" /* SHIP_DIR_H */]) {
-            dx += s;
-          } else {
-            dy += s;
-          }
-          shipPlaces.push({x: dx, y: dy});
-
-          if (dx >= this.width || dy >= this.height || this.shipMap[dx][dy] !== null) {
-            placeSuccess = false;
-          }
-        }
-        if (placeSuccess) {
-          shipPlaces.forEach((pos) => {
-            this.shipMap[pos.x][pos.y] = ship;
-            this.markCloseZone(pos.x, pos.y);
-          });
-          this.ship.push(ship);
-        } else {
-          placeTry--;
-        }
-      } while (!placeSuccess && placeTry > 0);
-
-    });
-    console.log(this.ship);
-  }
-
-  /**
-   * Отмечаем зону вокруг указаной клекти как закрытую длфя размещения кораблей
-   * @param centerX
-   * @param centerY
-   */
-  markCloseZone(centerX, centerY) {
-    for (let sx = -1; sx <=1; sx++) {
-      for (let sy = -1; sy <=1; sy++) {
-        const dx = centerX + sx;
-        const dy = centerY + sy;
-        if (dx >= 0 && dx < this.width
-          && dy >=0 && dy < this.height
-          && this.shipMap[dx][dy] === null
-        ) {
-          this.shipMap[dx][dy] = '.';
-        }
-      }
+  on(event, func) {
+    if (typeof this._listeners[event] === 'undefined') {
+      this._listeners[event] = [];
     }
+    this._listeners[event].push(func);
   }
 
   /**
-   * Выполнить функцию для каждой клетки поля
-   * @param func (x, y, field)
-   */
-  doForEachCell(func) {
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        func(x, y, this);
-      }
-    }
-  }
-
-
-  /**
-   * Проверка наличия корабля в клетке
+   * Генерируем событие, вызывая обработчиков
    *
-   * @param x
-   * @param y
+   * @param event
+   * @param data
    */
-  hasShip(x, y) {
-    return this.shipMap[x][y] !== null && this.shipMap[x][y] instanceof __WEBPACK_IMPORTED_MODULE_0__Ship_js__["a" /* default */];
+  emit(event, data) {
+    if (typeof this._listeners[event] !== 'undefined') {
+      this._listeners[event].forEach((func) => {
+        func.call(this, data);
+      });
+    }
   }
 }
-/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
+/* harmony export (immutable) */ __webpack_exports__["a"] = EventEmitter;
 
 
 /***/ }),
@@ -236,6 +149,89 @@ class Field {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__const_js__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Field_js__ = __webpack_require__(5);
+
+
+
+class GameSession {
+  /**
+   *
+   * @param {{human: bool, name: string, drawElement: {}}} player1
+   * @param {{human: bool, name: string, drawElement: {}}} player2
+   */
+  constructor (player1, player2) {
+    this.player1 = player1;
+    this.player2 = player2;
+
+    this.field1 = null;
+    this.field2 = null;
+
+    this.onePlayer = player1.human ^ player2.human;
+
+    this.currentPlayer = this.player1;
+  }
+
+
+  createFields() {
+    this.field1 = new __WEBPACK_IMPORTED_MODULE_1__Field_js__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0__const_js__["a" /* FIELD_SIZE */], __WEBPACK_IMPORTED_MODULE_0__const_js__["a" /* FIELD_SIZE */]);
+    if (this.onePlayer && this.player1.human) {
+      this.field1.ownField = true;
+    }
+    this.field1.generate(__WEBPACK_IMPORTED_MODULE_0__const_js__["b" /* defaultShipConfig */]);
+
+    this.field2 = new __WEBPACK_IMPORTED_MODULE_1__Field_js__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0__const_js__["a" /* FIELD_SIZE */], __WEBPACK_IMPORTED_MODULE_0__const_js__["a" /* FIELD_SIZE */]);
+    if (this.onePlayer && this.player2.human) {
+      this.field2.ownField = true;
+    }
+    this.field2.generate(__WEBPACK_IMPORTED_MODULE_0__const_js__["b" /* defaultShipConfig */]);
+  }
+
+  /**
+   * Обработка выстрела по клетки поля.
+   *
+   * Возвращает false если выстрел не валидный,
+   * иначе генерирует изменение поля и возрвщает true
+   *
+   * @param field
+   * @param x
+   * @param y
+   * @returns {boolean}
+   */
+  doShoot(field, x, y) {
+    if ((this.currentPlayer == this.player2 && field != this.field1)
+      || (this.currentPlayer == this.player1 && field != this.field2)
+      || !field.validateShoot(x, y)
+    ) {
+      console.log("can't fire");
+      return false;
+    }
+
+    const target = field.shoot(x, y);
+    if (target) {
+      field.emitter.emit('update', field);
+    }
+    console.log(target);
+    if (target != 'x') {
+      if (this.currentPlayer == this.player1) {
+        this.currentPlayer = this.player2;
+      } else {
+        this.currentPlayer = this.player1;
+      }
+    }
+
+    console.log(this.currentPlayer);
+  }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = GameSession;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_EventEmitter_js__ = __webpack_require__(1);
 const CONST = {
   CSS: {
     CELL: 'cell',
@@ -247,7 +243,8 @@ const CONST = {
     RIGHT_BORDER: 'right-border',
     TOP_BORDER: 'top-border',
     BOTTOM_BORDER: 'bottom-border',
-    OWN_SHIP: 'own-ship'
+    OWN_SHIP: 'own-ship',
+    MISS_SHOOT: 'miss-shoot'
   },
   ALPHA_LIST: [
     'А', 'Б', 'В', 'Г', 'Д','Е','Ж','З', 'И', 'К', 'Л', 'М', 'Н'
@@ -255,19 +252,36 @@ const CONST = {
 };
 
 
+
+
+
 class UIField {
-  constructor(field, interective) {
+  constructor(DOMElement, field, interactive) {
     this.modelField = field;
-    this.interective = interective;
+    this.interactive = interactive;
+
+    this.modelField.on('update', (field) => {
+      this.draw();
+    });
+
+    this.domElement = $(DOMElement);
+
+    this.emitter = new __WEBPACK_IMPORTED_MODULE_0__utils_EventEmitter_js__["a" /* default */]();
+
+    this.cellMap = [];
   }
+  on(event, func) {
+    this.emitter.on(event, func);
+  }
+
+
 
   /**
    * Полная отрисовка поля в указанный элемент
    *
-   * @param DOMElement
    */
-  fullDraw(DOMElement) {
-    const el = $(DOMElement);
+  fullDraw() {
+    const el = this.domElement;
     const own = this.modelField.ownField;
     el.html('');
     const corn = $(document.createElement('div'));
@@ -279,11 +293,14 @@ class UIField {
       const numberCell = $(document.createElement('div'));
       numberCell.addClass(CONST.CSS.CELL);
       numberCell.addClass(CONST.CSS.NUMBER_CELL);
-      numberCell.text(x+1);
+      numberCell.text(x + 1);
       el.append(numberCell);
     }
 
     this.modelField.doForEachCell((x, y, field) => {
+      if (typeof this.cellMap[x] === 'undefined') {
+        this.cellMap[x] = [];
+      }
       if (x == 0) {
         const alphaCell = $(document.createElement('div'));
         alphaCell.addClass(CONST.CSS.CELL);
@@ -314,8 +331,8 @@ class UIField {
         fieldCell.addClass(CONST.CSS.OWN_SHIP);
       }
 
-      if (this.interective) {
-        fieldCell.addClass("interective");
+      if (this.interactive) {
+        fieldCell.addClass("interactive");
         fieldCell.data('x', x);
         fieldCell.data('y', y);
         fieldCell.on('click', (evt) => {
@@ -323,38 +340,263 @@ class UIField {
         })
       }
 
+      if (field.shootMap[x][y] == '.') {
+        fieldCell.addClass("miss-shoot");
+      }
+      this.cellMap[x][y] = fieldCell;
       el.append(fieldCell);
     });
-
   }
 
+  draw() {
+    this.modelField.doForEachCell((x, y, field) => {
+      if (field.shootMap[x][y] == '.') {
+        this.cellMap[x][y].addClass(CONST.CSS.MISS_SHOOT)
+      }
+    });
+  }
+
+  /**
+   * Генерируем клик
+   *
+   * @param x
+   * @param y
+   */
   click(x, y) {
-    console.log("CLICK", x, y);
+    this.emitter.emit('click', {uiField: this, x: x, y:y});
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = UIField;
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__model_Field_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_UIField_js__ = __webpack_require__(2);
+/* harmony export (immutable) */ __webpack_exports__["run"] = run;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__model_GameSession_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ui_UIField_js__ = __webpack_require__(3);
 
 
 
-const field = __WEBPACK_IMPORTED_MODULE_0__model_Field_js__["a" /* default */];
-/* harmony export (immutable) */ __webpack_exports__["field"] = field;
+function run(fieldDom1, fieldDom2) {
+  const game = new __WEBPACK_IMPORTED_MODULE_0__model_GameSession_js__["a" /* default */](
+    {
+      human: true,
+      name: "Игрок"
+    },
+    {
+      human: false,
+      name: "SkyNet"
+    }
+  );
 
-const uiField = __WEBPACK_IMPORTED_MODULE_1__ui_UIField_js__["a" /* default */];
-/* harmony export (immutable) */ __webpack_exports__["uiField"] = uiField;
+  game.createFields();
+
+  const uiField = new __WEBPACK_IMPORTED_MODULE_1__ui_UIField_js__["a" /* default */]("#game-zone-1", game.field1, false);
+  uiField.fullDraw();
+  const uiEnemyField = new __WEBPACK_IMPORTED_MODULE_1__ui_UIField_js__["a" /* default */]("#game-zone-2", game.field2, true);
+  uiEnemyField.fullDraw();
+
+  uiEnemyField.on('click', (evt) => {
+    game.doShoot(evt.uiField.modelField, evt.x, evt.y);
+  });
+}
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Ship_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__const_js__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_EventEmitter_js__ = __webpack_require__(1);
+
+
+
+
+
+
+class Field {
+  constructor (width, height) {
+    this.width = width;
+    this.height = height;
+
+    this.shipMap = [];
+    this.shootMap = [];
+    for (let x = 0; x < width; x++) {
+      this.shipMap[x] = [];
+      this.shootMap[x] = [];
+      for (let y = 0; y < height; y++) {
+        this.shipMap[x][y] = null;
+        this.shootMap[x][y] = null;
+      }
+    }
+    this.ship = [];
+
+    this.ownField = false;
+
+    this.emitter = new __WEBPACK_IMPORTED_MODULE_2__utils_EventEmitter_js__["a" /* default */]();
+  }
+
+  on(event, func) {
+    this.emitter.on(event, func);
+  }
+
+  /**
+   * Генерируем размещение кораблей
+   *
+   * @param shipConfig
+   */
+  generate(shipConfig) {
+
+    const shipList = shipConfig.slice(0);
+    shipList.forEach((shipSize) => {
+      let placeTry = 1000;
+      const ship = new __WEBPACK_IMPORTED_MODULE_0__Ship_js__["a" /* default */](
+        shipSize,
+        Math.random() > 0.5?__WEBPACK_IMPORTED_MODULE_1__const_js__["c" /* SHIP_DIR_H */]:__WEBPACK_IMPORTED_MODULE_1__const_js__["d" /* SHIP_DIR_V */]
+      );
+      if (this.ownField) {
+        ship.live();
+      }
+      let placeSuccess;
+      do {
+        placeSuccess = true;
+
+        const x = Math.floor(Math.random() * this.width);
+        const y = Math.floor(Math.random() * this.height);
+
+        const shipPlaces = [];
+
+        for (let s = 0; s < ship.size && placeSuccess; s++) {
+          let dx = x;
+          let dy = y;
+          if (ship.dir == __WEBPACK_IMPORTED_MODULE_1__const_js__["c" /* SHIP_DIR_H */]) {
+            dx += s;
+          } else {
+            dy += s;
+          }
+          shipPlaces.push({x: dx, y: dy});
+
+          if (dx >= this.width || dy >= this.height || this.shipMap[dx][dy] !== null) {
+            placeSuccess = false;
+          }
+        }
+        if (placeSuccess) {
+          shipPlaces.forEach((pos) => {
+            this.shipMap[pos.x][pos.y] = ship;
+            this.markCloseZone(pos.x, pos.y);
+          });
+          this.ship.push(ship);
+        } else {
+          placeTry--;
+        }
+      } while (!placeSuccess && placeTry > 0);
+
+    });
+    console.log(this.ship);
+  }
+
+  /**
+   * Отмечаем зону вокруг указаной клекти как закрытую длфя размещения кораблей
+   * @param centerX
+   * @param centerY
+   * @param addShootMarks
+   */
+  markCloseZone(centerX, centerY, addShootMarks = false) {
+    for (let sx = -1; sx <=1; sx++) {
+      for (let sy = -1; sy <=1; sy++) {
+        const dx = centerX + sx;
+        const dy = centerY + sy;
+        if (dx >= 0 && dx < this.width
+          && dy >=0 && dy < this.height
+          && this.shipMap[dx][dy] === null
+        ) {
+          this.shipMap[dx][dy] = '.';
+          if (addShootMarks) {
+            this.shootMap[dx][dy] = '.';
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Выполнить функцию для каждой клетки поля
+   * @param func (x, y, field)
+   */
+  doForEachCell(func) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        func(x, y, this);
+      }
+    }
+  }
+
+  markDeadShip(ship) {
+    this.doForEachCell((x, y, field) => {
+      if (this.shipMap[x][y] == ship) {
+        this.markCloseZone(x, y, true);
+      }
+    });
+  }
+
+  /**
+   * Проверка возможности выстрела в указанную точку
+   *
+   * @param x
+   * @param y
+   * @returns {boolean}
+   */
+  validateShoot(x, y) {
+    return x >=0 && x < this.width
+      && y >=0 && y < this.height
+      && this.shootMap[x][y] === null;
+  }
+
+  /**
+   *
+   * @param x
+   * @param y
+   *
+   * @return
+   */
+  shoot(x, y) {
+    let mark = '';
+    if (this.validateShoot(x, y)) {
+      mark = '.';
+      if (this.shipMap[x][y] !== null && this.shipMap[x][y] instanceof __WEBPACK_IMPORTED_MODULE_0__Ship_js__["a" /* default */]) {
+        mark = 'x';
+        this.shipMap[x][y].damage();
+        if (this.shipMap[x][y].state == __WEBPACK_IMPORTED_MODULE_1__const_js__["e" /* SHIP_STATE_DEAD */]) {
+          this.markDeadShip(this.shipMap[x][y]);
+        }
+
+      }
+      this.shootMap[x][y] = mark;
+    }
+    return mark;
+  }
+
+
+  /**
+   * Проверка наличия корабля в клетке
+   *
+   * @param x
+   * @param y
+   */
+  hasShip(x, y) {
+    return this.shipMap[x][y] !== null && this.shipMap[x][y] instanceof __WEBPACK_IMPORTED_MODULE_0__Ship_js__["a" /* default */];
+  }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -370,15 +612,21 @@ class Ship {
     this.size = size;
     this.dir = dir;
 
-    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["c" /* SHIP_STATE_UNKNOWN */];
+    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["f" /* SHIP_STATE_UNKNOWN */];
+
+    this.health = size;
   }
 
   /**
    * Помечаем корабль поврежденным
    */
   damage() {
-    if (this.state == __WEBPACK_IMPORTED_MODULE_0__const_js__["d" /* SHIP_STATE_LIVE */]) {
-      this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["e" /* SHIP_STATE_DAMAGED */];
+    if (this.state == __WEBPACK_IMPORTED_MODULE_0__const_js__["g" /* SHIP_STATE_LIVE */]) {
+      this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["h" /* SHIP_STATE_DAMAGED */];
+    }
+    this.health--;
+    if (this.health <= 0) {
+      this.kill();
     }
   }
 
@@ -386,14 +634,14 @@ class Ship {
    * Помечаем корабль убитым
    */
   kill() {
-    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["f" /* SHIP_STATE_DEAD */]
+    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["e" /* SHIP_STATE_DEAD */]
   }
 
   /**
    * Пометить корабль как целый (известный)
    */
   live() {
-    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["d" /* SHIP_STATE_LIVE */];
+    this.state = __WEBPACK_IMPORTED_MODULE_0__const_js__["g" /* SHIP_STATE_LIVE */];
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Ship;

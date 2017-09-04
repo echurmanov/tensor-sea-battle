@@ -10,6 +10,8 @@ export default class Ship {
     this.dir = dir;
 
     this.state = CONST.SHIP_STATE_UNKNOWN;
+
+    this.health = size;
   }
 
   /**
@@ -18,6 +20,10 @@ export default class Ship {
   damage() {
     if (this.state == CONST.SHIP_STATE_LIVE) {
       this.state = CONST.SHIP_STATE_DAMAGED;
+    }
+    this.health--;
+    if (this.health <= 0) {
+      this.kill();
     }
   }
 
